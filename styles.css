@@ -1,0 +1,22 @@
+.title {
+    display: flex;
+    flex-direction: row;
+}
+
+#url_name {
+    padding-left: 8px;
+}
+
+.query {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.isSecure {
+    color: green;
+}
+
+.isNotSecure {
+    color: red;
+}
