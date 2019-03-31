@@ -1,26 +1,30 @@
 'use strict';
+const securityIndex = 0;
+const urlIndex = 1;
+
+let masterUrl;
 
 chrome.tabs.getSelected(null, function (tab) {
     myFunction(tab.url);
 });
 
 function myFunction(tablink) {
+    masterUrl = tablink;
     const groups = tablink
         .split('/')
         .filter(group => !!group);
 
     const numberOfGroups = groups.length;
-    const securityIndex = 0;
-    const urlIndex = 1;
-    const parameterIndex = numberOfGroups - 1;
 
     populateUrl(groups[urlIndex]);
 
     const isSecure = groups[securityIndex].includes("s");
     displaySecureIcons(isSecure);
 
-    populateQueryParameters(groups[parameterIndex]);
-
+    if (numberOfGroups > 2) {
+        const lastGroup = groups[numberOfGroups - 1];
+        populateQueryParameters(lastGroup);
+    }
 }
 
 function populateUrl(urlLabel) {
@@ -43,8 +47,8 @@ function displaySecureIcons(isSecure) {
 }
 
 function populateQueryParameters(queryParameters) {
-    if (queryParameters) {
-        var queryParametersList = queryParameters.split('?');
+    var queryParametersList = queryParameters.split('?');
+    if (queryParametersList.length > 1) {
         const workingParameters = queryParametersList[queryParameters.split('?') < 1 ? 0 : 1];
         var workingParametersList = workingParameters.split('&');
 
@@ -69,7 +73,7 @@ function buildRow(parameterText) {
 
     parameter.appendChild(detailSection);
 
-    var button = buildButton(areaWell, parameter);
+    var button = buildButton(areaWell, parameter, parameterText);
     var icon = buildIcon();
 
     button.appendChild(icon);
@@ -111,14 +115,14 @@ function buildParameter() {
 }
 
 
-function buildButton(areaWell, parameter) {
+function buildButton(areaWell, parameter, parameterText) {
     var button = document.createElement('button');
     button.type = "button";
     button.classList.add('btn');
     button.classList.add('btn-danger');
 
     button.addEventListener("click", function () {
-        onRemove(areaWell, parameter);
+        onRemove(areaWell, parameter, parameterText);
     });
 
     return button;
@@ -132,6 +136,11 @@ function buildIcon() {
     return icon;
 }
 
-function onRemove(areaWell, parameter) {
+function onRemove(areaWell, parameter, parameterText) {
     areaWell.removeChild(parameter);
+    masterUrl = masterUrl.replace(parameterText, '');
+    if (masterUrl[masterUrl.length-1] === '&') {
+        masterUrl = masterUrl.substring(0, masterUrl.length-1);
+    }
+    chrome.tabs.update({url: masterUrl});
 }
