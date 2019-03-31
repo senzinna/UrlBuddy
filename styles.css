@@ -21,3 +21,20 @@
     color: red;
 }
 
+.body {
+    width: 500px;
+    padding: 16px;
+}
+
+.page-header {
+    margin-top: 0 !important;;
+}
+
+.container {
+    padding: 0 !important;;
+}
+
+.options-header{
+    display: flex;
+    justify-content: space-between;
+}

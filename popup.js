@@ -2,18 +2,14 @@
 const securityIndex = 0;
 const urlIndex = 1;
 
-let masterUrl;
+let url;
 
 chrome.tabs.getSelected(null, function (tab) {
-    myFunction(tab.url);
-});
+    url = tab.url;
 
-function myFunction(tablink) {
-    masterUrl = tablink;
-    const groups = tablink
+    const groups = url
         .split('/')
         .filter(group => !!group);
-
     const numberOfGroups = groups.length;
 
     populateUrl(groups[urlIndex]);
@@ -25,32 +21,54 @@ function myFunction(tablink) {
         const lastGroup = groups[numberOfGroups - 1];
         populateQueryParameters(lastGroup);
     }
+});
+
+function onRemove(areaWell, parameter, parameterText) {
+    areaWell.removeChild(parameter);
+    removeParameterTextFromUrl(parameterText);
+    chrome.tabs.update({
+        url: url
+    });
 }
+
+function onRemoveAll(queryParameters) {
+    clearOptionList();
+    removeParameterTextFromUrl(queryParameters);
+    chrome.tabs.update({
+        url: url
+    });
+    window.close();
+}
+
+/*
+    These helper function are to display the different section on the UI
+*/
 
 function populateUrl(urlLabel) {
     if (urlLabel) {
-        var url_name = document.getElementById("url_name");
+        const url_name = document.getElementById("url_name");
         url_name.innerText = urlLabel;
     }
 }
 
 function displaySecureIcons(isSecure) {
+    const isSecureIcon = document.getElementById("isSecure");
+    const isNotSecureIcon = document.getElementById("isNotSecure");
     if (isSecure) {
-        var isSecureIcon = document.getElementById("isSecure");
-        var isNotSecureIcon = document.getElementById("isNotSecure");
-        if (isSecure) {
-            isNotSecureIcon.style.display = "none";
-        } else {
-            isSecureIcon.style.display = "none";
-        }
+        isNotSecureIcon.style.display = "none";
+    } else {
+        isSecureIcon.style.display = "none";
     }
 }
 
 function populateQueryParameters(queryParameters) {
-    var queryParametersList = queryParameters.split('?');
+    const queryParametersList = queryParameters.split('?');
+
+    buildRemoveAll(queryParameters);
+
     if (queryParametersList.length > 1) {
         const workingParameters = queryParametersList[queryParameters.split('?') < 1 ? 0 : 1];
-        var workingParametersList = workingParameters.split('&');
+        const workingParametersList = workingParameters.split('&');
 
         workingParametersList.forEach(parameter => {
             buildRow(parameter);
@@ -58,23 +76,36 @@ function populateQueryParameters(queryParameters) {
     }
 }
 
+
+/*
+    These helper function are to build the HTML elements
+*/
+
+function buildRemoveAll(queryParameters) {
+    const clearAllButton = document.getElementById("clear_all");
+    clearAllButton.focus();
+    clearAllButton.addEventListener("click", function () {
+        onRemoveAll(queryParameters);
+    });
+}
+
 function buildRow(parameterText) {
-    var parameterValues = parameterText.split("=");
+    const parameterValues = parameterText.split("=");
 
-    var areaWell = buildAreaWell();
-    var parameter = buildParameter();
-    var detailSection = buildDetailSection();
+    const areaWell = buildAreaWell();
+    const parameter = buildParameter();
+    const detailSection = buildDetailSection();
 
-    var parameterName = buildParameterName(parameterValues[0]);
+    const parameterName = buildParameterName(parameterValues[0]);
     detailSection.appendChild(parameterName);
 
-    var parameterValue = buildParameterValue(parameterValues[1]);
+    const parameterValue = buildParameterValue(parameterValues[1]);
     detailSection.appendChild(parameterValue);
 
     parameter.appendChild(detailSection);
 
-    var button = buildButton(areaWell, parameter, parameterText);
-    var icon = buildIcon();
+    const button = buildButton(areaWell, parameter, parameterText);
+    const icon = buildIcon();
 
     button.appendChild(icon);
     parameter.appendChild(button);
@@ -82,41 +113,40 @@ function buildRow(parameterText) {
 }
 
 function buildAreaWell() {
-    var areaWell = document.getElementById("container");
+    const areaWell = document.getElementById("container");
 
     return areaWell;
 }
 
 function buildDetailSection() {
-    var detailSection = document.createElement('div');
+    const detailSection = document.createElement('div');
 
     return detailSection;
 }
 
 function buildParameterName(name) {
-    var parameterName = document.createElement('strong');
+    const parameterName = document.createElement('strong');
     parameterName.innerHTML = name + ": ";
 
     return parameterName;
 }
 
 function buildParameterValue(value) {
-    var parameterValue = document.createTextNode(value);
+    const parameterValue = document.createTextNode(value);
 
     return parameterValue;
 }
 
 function buildParameter() {
-    var parameter = document.createElement('div');
+    const parameter = document.createElement('div');
     parameter.classList.add('well');
     parameter.classList.add('query');
 
     return parameter;
 }
 
-
 function buildButton(areaWell, parameter, parameterText) {
-    var button = document.createElement('button');
+    const button = document.createElement('button');
     button.type = "button";
     button.classList.add('btn');
     button.classList.add('btn-danger');
@@ -129,18 +159,34 @@ function buildButton(areaWell, parameter, parameterText) {
 }
 
 function buildIcon() {
-    var icon = document.createElement('i');
+    const icon = document.createElement('i');
     icon.classList.add('fa');
     icon.classList.add('fa-trash');
 
     return icon;
 }
 
-function onRemove(areaWell, parameter, parameterText) {
-    areaWell.removeChild(parameter);
-    masterUrl = masterUrl.replace(parameterText, '');
-    if (masterUrl[masterUrl.length-1] === '&') {
-        masterUrl = masterUrl.substring(0, masterUrl.length-1);
+function clearOptionList() {
+    const container = document.getElementById("container");
+    container.innerHTML = '';
+}
+
+/*
+    These helper function are to handle the delete actions
+*/
+
+function removeParameterTextFromUrl(parameterText) {
+    url = url.replace(parameterText, '');
+
+    if (hasTrailingAmpersand()) {
+        removeTrailingAmpersand();
     }
-    chrome.tabs.update({url: masterUrl});
+}
+
+function hasTrailingAmpersand() {
+    return url[url.length - 1] === '&';
+}
+
+function removeTrailingAmpersand() {
+    url = url.substring(0, url.length - 1);
 }

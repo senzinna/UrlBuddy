@@ -8,11 +8,11 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
 </head>
 
-<body class="container">
+<body class="body">
     <h3 class="page-header">
         <div class="title">
             <strong>URL: </strong>
-            <div id="url_name">hq.dev.geniuscentral</div>
+            <div id="url_name"></div>
         </div>
         <div>
             <strong>Secure:</strong>
@@ -21,7 +21,10 @@
         </div>
     </h3>
     <div class="details">
-        <h3>Options:</h3>
+        <h3 class="options-header">
+            <span>Options: </span>
+            <button tabindex="0" id="clear_all" type="button" class="btn btn-danger">Clear All</button>
+        </h3>
         <div id="container" class="container">
         </div>
     </div>
